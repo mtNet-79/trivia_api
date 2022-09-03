@@ -1,31 +1,30 @@
-import React, { Component } from 'react';
+import React, { Component, useEffect, useState } from 'react';
 import '../stylesheets/App.css';
 import Question from './Question';
 import Search from './Search';
 import $ from 'jquery';
 
-class QuestionView extends Component {
-  constructor() {
-    super();
-    this.state = {
-      questions: [],
+
+
+const QuestionView = () => {
+  const [values, setValues] = useState({
+    questions: [],
       page: 1,
       totalQuestions: 0,
       categories: {},
       currentCategory: null,
-    };
-  }
+  })
 
-  componentDidMount() {
-    this.getQuestions();
-  }
+  useEffect(() => {
+    getQuestions()
+  })
 
-  getQuestions = () => {
+  const getQuestions = () => {
     $.ajax({
-      url: `/questions?page=${this.state.page}`, //TODO: update request URL
+      url: `/questions?page=${page}`, //TODO: update request URL
       type: 'GET',
       success: (result) => {
-        this.setState({
+        setValues({
           questions: result.questions,
           totalQuestions: result.total_questions,
           categories: result.categories,
@@ -40,21 +39,20 @@ class QuestionView extends Component {
     });
   };
 
-  selectPage(num) {
-    this.setState({ page: num }, () => this.getQuestions());
+  function selectPage(num) {
+    setValues({...values, page:num});
+    console.log("values: ", values);
   }
 
-  createPagination() {
+  function createPagination() {
     let pageNumbers = [];
-    let maxPage = Math.ceil(this.state.totalQuestions / 10);
+    let maxPage = Math.ceil(values.totalQuestions / 10);
     for (let i = 1; i <= maxPage; i++) {
       pageNumbers.push(
         <span
           key={i}
-          className={`page-num ${i === this.state.page ? 'active' : ''}`}
-          onClick={() => {
-            this.selectPage(i);
-          }}
+          className={`page-num ${i === values.page ? 'active' : ''}`}
+          onClick={selectPage(i)}
         >
           {i}
         </span>
@@ -63,12 +61,13 @@ class QuestionView extends Component {
     return pageNumbers;
   }
 
-  getByCategory = (id) => {
+  const getByCategory = (id) => {
     $.ajax({
       url: `/categories/${id}/questions`, //TODO: update request URL
       type: 'GET',
       success: (result) => {
-        this.setState({
+        setValues({
+          ...values,
           questions: result.questions,
           totalQuestions: result.total_questions,
           currentCategory: result.current_category,
@@ -82,7 +81,7 @@ class QuestionView extends Component {
     });
   };
 
-  submitSearch = (searchTerm) => {
+  const submitSearch = (searchTerm) => {
     $.ajax({
       url: `/questions`, //TODO: update request URL
       type: 'POST',
@@ -94,7 +93,8 @@ class QuestionView extends Component {
       },
       crossDomain: true,
       success: (result) => {
-        this.setState({
+        setValues({
+          ...values,
           questions: result.questions,
           totalQuestions: result.total_questions,
           currentCategory: result.current_category,
@@ -108,14 +108,14 @@ class QuestionView extends Component {
     });
   };
 
-  questionAction = (id) => (action) => {
+  const questionAction = (id) => (action) => {
     if (action === 'DELETE') {
       if (window.confirm('are you sure you want to delete the question?')) {
         $.ajax({
           url: `/questions/${id}`, //TODO: update request URL
           type: 'DELETE',
           success: (result) => {
-            this.getQuestions();
+            getQuestions();
           },
           error: (error) => {
             alert('Unable to load questions. Please try your request again');
@@ -126,53 +126,53 @@ class QuestionView extends Component {
     }
   };
 
-  render() {
+ 
     return (
       <div className='question-view'>
         <div className='categories-list'>
           <h2
             onClick={() => {
-              this.getQuestions();
+              getQuestions();
             }}
           >
             Categories
           </h2>
           <ul>
-            {Object.keys(this.state.categories).map((id) => (
+            {Object.keys(values.categories).map((id) => (
               <li
                 key={id}
                 onClick={() => {
-                  this.getByCategory(id);
+                  getByCategory(id);
                 }}
               >
-                {this.state.categories[id]}
+                {values.categories[id]}
                 <img
                   className='category'
-                  alt={`${this.state.categories[id].toLowerCase()}`}
-                  src={`${this.state.categories[id].toLowerCase()}.svg`}
+                  alt={`${values.categories[id].toLowerCase()}`}
+                  src={`${values.categories[id].toLowerCase()}.svg`}
                 />
               </li>
             ))}
           </ul>
-          <Search submitSearch={this.submitSearch} />
+          <Search submitSearch={submitSearch} />
         </div>
         <div className='questions-list'>
           <h2>Questions</h2>
-          {this.state.questions.map((q, ind) => (
+          {values.questions.map((q, ind) => (
             <Question
               key={q.id}
               question={q.question}
               answer={q.answer}
-              category={this.state.categories[q.category]}
+              category={values.categories[q.category]}
               difficulty={q.difficulty}
-              questionAction={this.questionAction(q.id)}
+              questionAction={questionAction(q.id)}
             />
           ))}
-          <div className='pagination-menu'>{this.createPagination()}</div>
+          <div className='pagination-menu'>{createPagination()}</div>
         </div>
       </div>
     );
-  }
+  
 }
 
 export default QuestionView;
