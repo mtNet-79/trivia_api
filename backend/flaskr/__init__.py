@@ -8,26 +8,60 @@ from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
 
+def paginate_results(request, selection):
+    page = request.args.get("page", 1, type=int)
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
+
+    questions = [q.format() for q in selection]
+    current_questions = questions[start:end]
+
+    return current_questions
+
+
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
     setup_db(app)
+    CORS(app, origins=["*"])
 
-    """
-    @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
-    """
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+        return response
 
-    """
-    @TODO: Use the after_request decorator to set Access-Control-Allow
-    """
+    @app.route("/categories")
+    def get_all():
+        cats = Category.query.order_by(Category.id).all()
 
-    """
-    @TODO:
-    Create an endpoint to handle GET requests
-    for all available categories.
-    """
+        if len(cats) == 0:
+            abort(404)
+        return jsonify({
+            "success": True,
+            "categories": cats
+        })
 
 
+
+    @app.route("/questions/<cat>")
+    def get_questions():
+        sltcn = Question.query.order_by(Question.id).all()
+        current_slctn = paginate_results(request, sltcn)
+
+        if len(current_slctn) == 0:
+            abort(404)
+
+        return jsonify(
+            {
+                "success": True,
+                "questions": current_slctn,
+                "total_questions": len(Question.query.all()),
+                "current_category": len(Question.query.all()),
+                "categories": len(Question.query.all())
+            }
+        )
     """
     @TODO:
     Create an endpoint to handle GET requests for questions,
