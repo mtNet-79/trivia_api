@@ -5,6 +5,7 @@ from flask_cors import CORS
 from models import Question, Category
 # from flaskr import app
 from flask import Blueprint
+import random
 
 main = Blueprint('main', __name__)
 
@@ -52,6 +53,9 @@ def get_all_categories():
 def get_questions():
     sltcn = Question.query.order_by(Question.id).all()
     current_slctn = paginate_results(request, sltcn)
+    cats= Category.query.all()
+    
+    formatted_cats = [cat.format() for cat in cats]
 
     if len(current_slctn) == 0:
         abort(404)
@@ -61,8 +65,8 @@ def get_questions():
             "success": True,
             "questions": current_slctn,
             "total_questions": len(Question.query.all()),
-            "current_category": len(Question.query.all()),
-            "categories": len(Question.query.all())
+            "current_category":'all',
+            "categories": formatted_cats
         }
     )
 
@@ -115,7 +119,7 @@ def delete_question(qid):
 
     return jsonify({
         'success': True,
-        'delete': qid,
+        'deleted': qid,
         'questions': curr_questions,
         'total_questions': len(slctn)
     })
@@ -164,26 +168,28 @@ the form will clear and the question will appear at the end of the last page
 of the questions list in the "List" tab.
 """
 
+
 @main.route("/questions", methods=['POST'])
 def search_question():
     body = request.get_json()
-    
+
     search_term = body.get('searchTerm', None)
-    
-    
+
     try:
-        questions = Question.query.filter(Question.question.like(search_term + "%")).all()
-        
+        questions = Question.query.filter(
+            Question.question.like(search_term + "%")).all()
+
         pagedQueryRes = paginate_results(request, questions)
-        
+
         return jsonify({
             'success': True,
             'questions': pagedQueryRes,
             'totalQuestions': len(questions)
         })
-        
+
     except:
         abort(405)
+
 
 """
 @TODO:
@@ -195,6 +201,60 @@ TEST: Search by any phrase. The questions list will update to include
 only question that include that string within their question.
 Try using the word "title" to start.
 """
+
+
+@main.route('/categories/<int:cat_id>/questions')
+def get_questions_by_category(cat_id):
+
+    try:
+        cats = Category.query.filter(Category.id == cat_id).one_or_none()
+
+        questions = Question.query.filter(Question.category == cat_id).all()
+
+        curr_questions = paginate_results(request, questions)
+
+        return jsonify({
+            'success': True,
+            'questions': curr_questions,
+            'totalQuestions': len(questions),
+            'currentCategory': cats.type
+        })
+    except:
+        abort(404)
+
+
+@main.route('/quizzes', methods=['POST'])
+def play_quiz():
+    body = request.get_json()
+
+    previous_questions_ids = body.get('previous_questions', None)
+    # print(f"previous Q's {previous_questions_ids}")
+    quiz_category = body.get('quiz_category', None)
+    # print(f"quiz_category:  {quiz_category['id']}")
+    questions = Question.query.all()
+
+    rand_index_num = random.randrange(len(questions))
+    # print(f"rand_index_num:  {rand_index_num}")
+    if quiz_category:
+        questions = Question.query.filter(
+            Question.category == quiz_category['id']).all()
+    count = 0
+    if len(previous_questions_ids) > 0:
+        while questions[rand_index_num].id in previous_questions_ids :
+            rand_index_num = random.randrange(len(questions))
+            count += 1
+            if count == len(questions):
+                break
+        else:
+            current_question = questions[rand_index_num]
+    else:
+        current_question = questions[rand_index_num]
+    # print(f"current_question:  {current_question}")
+    return jsonify({
+        'success': True,
+        'currentQuestion': current_question.format(),
+
+    })
 
 
 @main.errorhandler(404)
@@ -222,8 +282,6 @@ def unproccessable_entity(error):
                 "message": "unproccessable entity"}),
         422,
     )
-
-
 
 
 """
