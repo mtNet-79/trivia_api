@@ -13,3 +13,7 @@ ehthumbs.db
 Thumbs.db
 env/
 frontend/node_modules/
+backend/.env
+backend/__pycache__
+backend/instance/
+hold/

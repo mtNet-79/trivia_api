@@ -9,10 +9,11 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-router-dom": "^5.0.0",
-    "react-scripts": "3.0.1"
+    "react-scripts": "5.0.1"
   },
   "scripts": {
-    "start": "node node_modules/react-scripts/scripts/start.js",
+    "start": "react-scripts start",
+    "start-backend": "cd backend && env/bin/flask run --no-debugger",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
