@@ -7,7 +7,7 @@ venv
 .DS_Store
 .DS_Store?
 ._*
-.*
+backend/.env
 .Spotlight-V100
 .Trashes
 ehthumbs.db
