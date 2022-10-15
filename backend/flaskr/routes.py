@@ -23,6 +23,14 @@ def paginate_results(request, selection):
 
     return current_questions
 
+def create_dict(arr):
+    cats_dict ={}
+    for x in arr:
+        k = list(x.items())[0][1]
+        v = list(x.items())[1][1]
+        cats_dict[k] = v
+    return cats_dict
+
 
 CORS(main, origins=["*"])
 
@@ -36,17 +44,8 @@ def after_request(response):
                          'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
+#----------------------------HOME PAGE ROUTES-----------------------------------------#
 
-@main.route("/categories")
-def get_all_categories():
-    cats = Category.query.order_by(Category.id).all()
-    formatted_categories = [cat.format() for cat in cats]
-    if len(cats) == 0:
-        abort(500)
-    return jsonify({
-        "success": True,
-        "categories": formatted_categories
-    })
 
 
 @main.route("/questions")
@@ -56,7 +55,7 @@ def get_questions():
     cats= Category.query.all()
     
     formatted_cats = [cat.format() for cat in cats]
-
+    cats_dict = create_dict(formatted_cats)
     if len(current_slctn) == 0:
         abort(404)
 
@@ -66,47 +65,51 @@ def get_questions():
             "questions": current_slctn,
             "total_questions": len(Question.query.all()),
             "current_category":'all',
-            "categories": formatted_cats
+            "categories": cats_dict
         }
     )
+    
+    
+@main.route('/categories/<int:cat_id>/questions')
+def get_questions_by_category(cat_id):
+    print(cat_id)
 
+    # try:
+    cat = Category.query.filter(Category.id == cat_id).one_or_none()
+    print(f"cat {cat}")
 
-"""
-@TODO:
-Create an endpoint to handle GET requests for questions,
-including pagination (every 10 questions).
-This endpoint should return a list of questions,
-number of total questions, current category, categories.
+    questions = Question.query.filter(Question.category_id == cat_id).all()
 
-TEST: At this point, when you start the application
-you should see questions and categories generated,
-ten questions per page and pagination at the bottom of the screen for three pages.
-Clicking on the page numbers should update the questions.
-"""
-
-
-@main.route("/questions/<int:question_id>")
-def get_question(question_id):
-
-    question = Question.query.get(question_id)
-
-    formatted_question = question.format()
+    curr_questions = paginate_results(request, questions)
 
     return jsonify({
         'success': True,
-        'question': formatted_question
+        'questions': curr_questions,
+        'total_questions': len(questions),
+        'current_category': cat.type
     })
+        
+@main.route("/questions", methods=['POST'])
+def search_question_by_term():
+    body = request.get_json()
 
+    search_term = body.get('searchTerm', None)
 
-"""
-@TODO:
-Create an endpoint to DELETE question using a question ID.
+    try:
+        questions = Question.query.filter(
+            Question.question.like(f"%{search_term}%")).all()
 
-TEST: When you click the trash icon next to a question, the question will be removed.
-This removal will persist in the database and when you refresh the page.
-"""
+        pagedQueryRes = paginate_results(request, questions)
 
+        return jsonify({
+            'success': True,
+            'questions': pagedQueryRes,
+            'totalQuestions': len(questions)
+        })
 
+    except:
+        abort(405)
+        
 @main.route("/question/<int:qid>", methods=['DELETE'])
 def delete_question(qid):
     question = Question.query.filter(Question.id == qid).one_or_none()
@@ -123,8 +126,22 @@ def delete_question(qid):
         'questions': curr_questions,
         'total_questions': len(slctn)
     })
-
-
+    
+#----------------------ADD PAGE-------------------------------#
+@main.route("/categories")
+def get_all_categories():
+    cats = Category.query.order_by(Category.id).all()
+    formatted_categories = [cat.format() for cat in cats]
+    cats_dict = create_dict(formatted_categories)
+    
+  
+    if len(cats) == 0:
+        abort(500)
+    return jsonify({
+        "success": True,
+        "categories": cats_dict
+    })
+    
 @main.route("/add/questions", methods=['POST'])
 def create_question():
     try:
@@ -141,6 +158,8 @@ def create_question():
             category=new_category,
             difficulty=new_difficulty
         )
+        
+        print(f"question is {question}")
 
         question.insert()
 
@@ -157,70 +176,25 @@ def create_question():
         abort(405)
 
 
-"""
-@TODO:
-Create an endpoint to POST a new question,
-which will require the question and answer text,
-category, and difficulty score.
-
-TEST: When you submit a question on the "Add" tab,
-the form will clear and the question will appear at the end of the last page
-of the questions list in the "List" tab.
-"""
 
 
-@main.route("/questions", methods=['POST'])
-def search_question():
-    body = request.get_json()
 
-    search_term = body.get('searchTerm', None)
+@main.route("/questions/<int:question_id>")
+def get_question(question_id):
 
-    try:
-        questions = Question.query.filter(
-            Question.question.like(search_term + "%")).all()
+    question = Question.query.get(question_id)
 
-        pagedQueryRes = paginate_results(request, questions)
+    formatted_question = question.format()
 
-        return jsonify({
-            'success': True,
-            'questions': pagedQueryRes,
-            'totalQuestions': len(questions)
-        })
-
-    except:
-        abort(405)
+    return jsonify({
+        'success': True,
+        'question': formatted_question
+    })
 
 
-"""
-@TODO:
-Create a POST endpoint to get questions based on a search term.
-It should return any questions for whom the search term
-is a substring of the question.
-
-TEST: Search by any phrase. The questions list will update to include
-only question that include that string within their question.
-Try using the word "title" to start.
-"""
 
 
-@main.route('/categories/<int:cat_id>/questions')
-def get_questions_by_category(cat_id):
 
-    try:
-        cats = Category.query.filter(Category.id == cat_id).one_or_none()
-
-        questions = Question.query.filter(Question.category == cat_id).all()
-
-        curr_questions = paginate_results(request, questions)
-
-        return jsonify({
-            'success': True,
-            'questions': curr_questions,
-            'totalQuestions': len(questions),
-            'currentCategory': cats.type
-        })
-    except:
-        abort(404)
 
 
 @main.route('/quizzes', methods=['POST'])
@@ -228,16 +202,19 @@ def play_quiz():
     body = request.get_json()
 
     previous_questions_ids = body.get('previous_questions', None)
-    # print(f"previous Q's {previous_questions_ids}")
+    print(f"previous Q's {previous_questions_ids}")
     quiz_category = body.get('quiz_category', None)
-    # print(f"quiz_category:  {quiz_category['id']}")
+    print(f"quiz_category:  {quiz_category['id']}")
     questions = Question.query.all()
-
-    rand_index_num = random.randrange(len(questions))
-    # print(f"rand_index_num:  {rand_index_num}")
+    print(f"questions:  {questions[13]}")
+    
     if quiz_category:
         questions = Question.query.filter(
-            Question.category == quiz_category['id']).all()
+            Question.category_id == quiz_category['id']).all()
+    
+    print(f"len(questions)  {len(questions)}")
+    rand_index_num = random.randrange(len(questions))
+    print(f"rand_index_num:  {rand_index_num}")
     count = 0
     if len(previous_questions_ids) > 0:
         while questions[rand_index_num].id in previous_questions_ids :
@@ -249,7 +226,7 @@ def play_quiz():
             current_question = questions[rand_index_num]
     else:
         current_question = questions[rand_index_num]
-    # print(f"current_question:  {current_question}")
+    print(f"current_question:  {current_question}")
     return jsonify({
         'success': True,
         'currentQuestion': current_question.format(),
@@ -286,6 +263,19 @@ def unproccessable_entity(error):
 
 """
 @TODO:
+Create an endpoint to handle GET requests for questions,
+including pagination (every 10 questions)
+This endpoint should return a list of questions,
+number of total questions, current category, categories.
+
+TEST: At this point, when you start the application
+you should see questions and categories generated,
+ten questions per page and pagination at the bottom of the screen for three pages.
+Clicking on the page numbers should update the questions.
+"""
+
+"""
+@TODO:
 Create a GET endpoint to get questions based on category.
 
 TEST: In the "List" tab / main screen, clicking on one of the
@@ -309,4 +299,46 @@ and shown whether they were correct or not.
 @TODO:
 Create error handlers for all expected errors
 including 404 and 422.
+"""
+
+
+"""
+@TODO:
+Create an endpoint to DELETE question using a question ID.
+
+TEST: When you click the trash icon next to a question, the question will be removed.
+This removal will persist in the database and when you refresh the page.
+"""
+
+
+
+
+
+
+
+
+"""
+@TODO:
+Create an endpoint to POST a new question,
+which will require the question and answer text,
+category, and difficulty score.
+
+TEST: When you submit a question on the "Add" tab,
+the form will clear and the question will appear at the end of the last page
+of the questions list in the "List" tab.
+"""
+
+
+
+
+
+"""
+@TODO:
+Create a POST endpoint to get questions based on a search term.
+It should return any questions for whom the search term
+is a substring of the question.
+
+TEST: Search by any phrase. The questions list will update to include
+only question that include that string within their question.
+Try using the word "title" to start.
 """

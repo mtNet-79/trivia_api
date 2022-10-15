@@ -28,7 +28,7 @@ class Question extends Component {
           <img
             src='delete.png'
             alt='delete'
-            className='delete'
+            className='delete click'
             onClick={() => this.props.questionAction('DELETE')}
           />
         </div>

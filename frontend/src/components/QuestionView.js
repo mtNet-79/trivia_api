@@ -51,7 +51,7 @@ class QuestionView extends Component {
       pageNumbers.push(
         <span
           key={i}
-          className={`page-num ${i === this.state.page ? 'active' : ''}`}
+          className={`page-num ${i === this.state.page ? 'active' : ''} click`}
           onClick={() => {
             this.selectPage(i);
           }}
@@ -134,6 +134,7 @@ class QuestionView extends Component {
             onClick={() => {
               this.getQuestions();
             }}
+            className="click"
           >
             Categories
           </h2>
@@ -144,6 +145,7 @@ class QuestionView extends Component {
                 onClick={() => {
                   this.getByCategory(id);
                 }}
+                className="click"
               >
                 {this.state.categories[id]}
                 <img
@@ -163,7 +165,7 @@ class QuestionView extends Component {
               key={q.id}
               question={q.question}
               answer={q.answer}
-              category={this.state.categories[q.category]}
+              category={this.state.categories[q.category_id]}
               difficulty={q.difficulty}
               questionAction={this.questionAction(q.id)}
             />
