@@ -23,8 +23,9 @@ def paginate_results(request, selection):
 
     return current_questions
 
+
 def create_dict(arr):
-    cats_dict ={}
+    cats_dict = {}
     for x in arr:
         k = list(x.items())[0][1]
         v = list(x.items())[1][1]
@@ -47,13 +48,12 @@ def after_request(response):
 #----------------------------HOME PAGE ROUTES-----------------------------------------#
 
 
-
 @main.route("/questions")
 def get_questions():
     sltcn = Question.query.order_by(Question.id).all()
     current_slctn = paginate_results(request, sltcn)
-    cats= Category.query.all()
-    
+    cats = Category.query.all()
+
     formatted_cats = [cat.format() for cat in cats]
     cats_dict = create_dict(formatted_cats)
     if len(current_slctn) == 0:
@@ -64,12 +64,12 @@ def get_questions():
             "success": True,
             "questions": current_slctn,
             "total_questions": len(Question.query.all()),
-            "current_category":'all',
+            "current_category": 'all',
             "categories": cats_dict
         }
     )
-    
-    
+
+
 @main.route('/categories/<int:cat_id>/questions')
 def get_questions_by_category(cat_id):
     print(cat_id)
@@ -88,7 +88,8 @@ def get_questions_by_category(cat_id):
         'total_questions': len(questions),
         'current_category': cat.type
     })
-        
+
+
 @main.route("/questions", methods=['POST'])
 def search_question_by_term():
     body = request.get_json()
@@ -98,6 +99,7 @@ def search_question_by_term():
     try:
         questions = Question.query.filter(
             Question.question.like(f"%{search_term}%")).all()
+        print(questions)
 
         pagedQueryRes = paginate_results(request, questions)
 
@@ -109,9 +111,11 @@ def search_question_by_term():
 
     except:
         abort(405)
-        
-@main.route("/question/<int:qid>", methods=['DELETE'])
+
+
+@main.route("/questions/<int:qid>", methods=['DELETE'])
 def delete_question(qid):
+    print(qid)
     question = Question.query.filter(Question.id == qid).one_or_none()
     if question is None:
         abort(404)
@@ -126,22 +130,24 @@ def delete_question(qid):
         'questions': curr_questions,
         'total_questions': len(slctn)
     })
-    
+
 #----------------------ADD PAGE-------------------------------#
+
+
 @main.route("/categories")
 def get_all_categories():
     cats = Category.query.order_by(Category.id).all()
     formatted_categories = [cat.format() for cat in cats]
     cats_dict = create_dict(formatted_categories)
-    
-  
+
     if len(cats) == 0:
         abort(500)
     return jsonify({
         "success": True,
         "categories": cats_dict
     })
-    
+
+
 @main.route("/add/questions", methods=['POST'])
 def create_question():
     try:
@@ -155,11 +161,9 @@ def create_question():
         question = Question(
             question=new_question,
             answer=new_answer,
-            category=new_category,
+            category_id=new_category,
             difficulty=new_difficulty
         )
-        
-        print(f"question is {question}")
 
         question.insert()
 
@@ -176,11 +180,9 @@ def create_question():
         abort(405)
 
 
-
-
-
 @main.route("/questions/<int:question_id>")
 def get_question(question_id):
+    print(f"here I be ${question_id}")
 
     question = Question.query.get(question_id)
 
@@ -190,11 +192,6 @@ def get_question(question_id):
         'success': True,
         'question': formatted_question
     })
-
-
-
-
-
 
 
 @main.route('/quizzes', methods=['POST'])
@@ -207,17 +204,17 @@ def play_quiz():
     print(f"quiz_category:  {quiz_category['id']}")
     questions = Question.query.all()
     print(f"questions:  {questions[13]}")
-    
+
     if quiz_category:
         questions = Question.query.filter(
             Question.category_id == quiz_category['id']).all()
-    
+
     print(f"len(questions)  {len(questions)}")
     rand_index_num = random.randrange(len(questions))
     print(f"rand_index_num:  {rand_index_num}")
     count = 0
     if len(previous_questions_ids) > 0:
-        while questions[rand_index_num].id in previous_questions_ids :
+        while questions[rand_index_num].id in previous_questions_ids:
             rand_index_num = random.randrange(len(questions))
             count += 1
             if count == len(questions):
@@ -311,12 +308,6 @@ This removal will persist in the database and when you refresh the page.
 """
 
 
-
-
-
-
-
-
 """
 @TODO:
 Create an endpoint to POST a new question,
@@ -327,9 +318,6 @@ TEST: When you submit a question on the "Add" tab,
 the form will clear and the question will appear at the end of the last page
 of the questions list in the "List" tab.
 """
-
-
-
 
 
 """

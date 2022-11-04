@@ -21,16 +21,19 @@ class QuestionView extends Component {
   }
 
   getQuestions = () => {
+    
     $.ajax({
       url: `/questions?page=${this.state.page}`, //TODO: update request URL
       type: 'GET',
       success: (result) => {
+        
         this.setState({
           questions: result.questions,
           totalQuestions: result.total_questions,
           categories: result.categories,
           currentCategory: result.current_category,
         });
+        console.log(this.state.categories[1])
         return;
       },
       error: (error) => {
