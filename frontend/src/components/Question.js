@@ -22,11 +22,11 @@ class Question extends Component {
           <img
             className='category'
             alt={`${category.toLowerCase()}`}
-            src={`${category.toLowerCase()}.svg`}
+            src={`${process.env.PUBLIC_URL}/${category.toLowerCase()}.svg`}
           />
           <div className='difficulty'>Difficulty: {difficulty}</div>
           <img
-            src='delete.png'
+            src={`${process.env.PUBLIC_URL}/delete.png`}
             alt='delete'
             className='delete click'
             onClick={() => this.props.questionAction('DELETE')}

@@ -6,6 +6,7 @@ from models import Question, Category
 # from flaskr import app
 from flask import Blueprint
 import random
+from random import choice
 
 main = Blueprint('main', __name__)
 
@@ -148,7 +149,7 @@ def get_all_categories():
     })
 
 
-@main.route("/add/questions", methods=['POST'])
+@main.route("/add", methods=['POST'])
 def create_question():
     try:
         body = request.get_json()
@@ -199,36 +200,42 @@ def play_quiz():
     body = request.get_json()
 
     previous_questions_ids = body.get('previous_questions', None)
-    print(f"previous Q's {previous_questions_ids}")
     quiz_category = body.get('quiz_category', None)
-    print(f"quiz_category:  {quiz_category['id']}")
     questions = Question.query.all()
-    print(f"questions:  {questions[13]}")
 
     if quiz_category:
         questions = Question.query.filter(
             Question.category_id == quiz_category['id']).all()
-
-    print(f"len(questions)  {len(questions)}")
-    rand_index_num = random.randrange(len(questions))
-    print(f"rand_index_num:  {rand_index_num}")
-    count = 0
+        
+    rand_index_num = random.randrange(len(questions))    
+    rtrnObj = {}
+    current_question = None
+    
     if len(previous_questions_ids) > 0:
+        prevRange = []
         while questions[rand_index_num].id in previous_questions_ids:
-            rand_index_num = random.randrange(len(questions))
-            count += 1
-            if count == len(questions):
-                break
+            prevRange.append(rand_index_num)
+            qsAvailable = [i for i in range(len(questions)) if i not in prevRange]
+            if qsAvailable:
+                rand_index_num = choice(qsAvailable)
+            else :
+                break              
         else:
             current_question = questions[rand_index_num]
     else:
         current_question = questions[rand_index_num]
-    print(f"current_question:  {current_question}")
-    return jsonify({
-        'success': True,
-        'currentQuestion': current_question.format(),
-
-    })
+    if not current_question:
+        rtrnObj = {
+            'success': True,
+            'currentQuestion': None
+        }
+    else :
+         rtrnObj = {
+            'success': True,
+            'currentQuestion': current_question.format(),
+        }
+         
+    return jsonify(rtrnObj)
 
 
 @main.errorhandler(404)
