@@ -73,22 +73,21 @@ def get_questions():
 
 @main.route('/categories/<int:cat_id>/questions')
 def get_questions_by_category(cat_id):
-    print(cat_id)
+    try:
+        cat = Category.query.filter(Category.id == cat_id).one_or_none()
 
-    # try:
-    cat = Category.query.filter(Category.id == cat_id).one_or_none()
-    print(f"cat {cat}")
+        questions = Question.query.filter(Question.category_id == cat_id).all()
 
-    questions = Question.query.filter(Question.category_id == cat_id).all()
+        curr_questions = paginate_results(request, questions)
 
-    curr_questions = paginate_results(request, questions)
-
-    return jsonify({
-        'success': True,
-        'questions': curr_questions,
-        'total_questions': len(questions),
-        'current_category': cat.type
-    })
+        return jsonify({
+            'success': True,
+            'questions': curr_questions,
+            'total_questions': len(questions),
+            'current_category': cat.type
+        })
+    except:
+        abort(404)
 
 
 @main.route("/questions", methods=['POST'])
@@ -100,7 +99,6 @@ def search_question_by_term():
     try:
         questions = Question.query.filter(
             Question.question.like(f"%{search_term}%")).all()
-        print(questions)
 
         pagedQueryRes = paginate_results(request, questions)
 
@@ -111,12 +109,11 @@ def search_question_by_term():
         })
 
     except:
-        abort(405)
+        abort(500)
 
 
 @main.route("/questions/<int:qid>", methods=['DELETE'])
 def delete_question(qid):
-    print(qid)
     question = Question.query.filter(Question.id == qid).one_or_none()
     if question is None:
         abort(404)
@@ -183,7 +180,6 @@ def create_question():
 
 @main.route("/questions/<int:question_id>")
 def get_question(question_id):
-    print(f"here I be ${question_id}")
 
     question = Question.query.get(question_id)
 
@@ -201,13 +197,21 @@ def play_quiz():
 
     previous_questions_ids = body.get('previous_questions', None)
     quiz_category = body.get('quiz_category', None)
+    category = quiz_category['type']
     questions = Question.query.all()
 
-    if quiz_category:
+    if quiz_category['type'] != "All":
+        print("here")
         questions = Question.query.filter(
             Question.category_id == quiz_category['id']).all()
         
-    rand_index_num = random.randrange(len(questions))    
+    if questions:
+        rand_index_num = random.randrange(len(questions))    
+    else:
+        return jsonify({
+            'success': True,
+            'currentQuestion': None
+        })
     rtrnObj = {}
     current_question = None
     
@@ -234,7 +238,6 @@ def play_quiz():
             'success': True,
             'currentQuestion': current_question.format(),
         }
-         
     return jsonify(rtrnObj)
 
 

@@ -34,9 +34,7 @@ class QuizView extends Component {
     });
   }
 
-  selectCategory = ({ type, id = 0 }) => {
-    console.log("type: ", type)
-    console.log("id: ", id)
+  selectCategory = ({ type="All", id = 0 }) => {
     this.setState({ quizCategory: { type, id } }, this.getNextQuestion);
   };
 
@@ -45,12 +43,12 @@ class QuizView extends Component {
   };
 
   getNextQuestion = () => {
+    
     const previousQuestions = [...this.state.previousQuestions];
     if (this.state.currentQuestion.id) {
       previousQuestions.push(this.state.currentQuestion.id);
     }
-    console.log("previousQuestions: " , previousQuestions);
-    console.log("quizCategory: " , this.state.quizCategory);
+   
     $.ajax({
       url: '/quizzes', //TODO: update request URL
       type: 'POST',
@@ -65,7 +63,6 @@ class QuizView extends Component {
       },
       crossDomain: true,
       success: (result) => {
-        console.log("result : ", result)
         this.setState({
           showAnswer: false,
           previousQuestions: previousQuestions,
@@ -104,11 +101,14 @@ class QuizView extends Component {
   };
 
   renderPrePlay() {
+    
     return (
       <div className='quiz-play-holder'>
         <div className='choose-header'>Choose Category</div>
         <div className='category-holder'>
-          <div className='play-category click' onClick={this.selectCategory}>
+          <div className='play-category click' onClick={() =>
+                  this.selectCategory({ type: "All"})
+                }>
             ALL
           </div>
           {Object.keys(this.state.categories).map((id) => {
@@ -174,6 +174,7 @@ class QuizView extends Component {
   }
 
   renderPlay() {
+    console.log(`Tese are the prev ${this.state.previousQuestions}`)
     return this.state.previousQuestions.length === questionsPerPlay ||
       this.state.forceEnd ? (
       this.renderFinalScore()
