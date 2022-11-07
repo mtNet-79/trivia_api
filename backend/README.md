@@ -23,6 +23,20 @@ pip install -r requirements.txt
 
 - [Flask-CORS](https://flask-cors.readthedocs.io/en/latest/#) is the extension we'll use to handle cross-origin requests from our frontend server.
 
+### Set up configuration environment variables in an .env file
+Navigate to the /backend directory and create enviroment file
+```bash
+touch .env
+```
+Inside of the .env file create the following variables:
+``` 
+SECRET_KEY='my_secret_key'
+PASSWORD = 'my_postgres_database_password'
+FLASK_APP=flaskr
+FLASK_ENV=development
+```
+Look carefully at your config.py file and the associated .env file to make sure passwords match on both testing and primarmy configurations.
+
 ### Set up the Database
 
 With Postgres running, create a `trivia` database:
@@ -50,19 +64,7 @@ flask run --reload
 The `--reload` flag will detect file changes and restart the server automatically.
 
 
-# FrontEnd - Trivia API
 
-## Setting up the frontend
-### Install Node and NPM in the frontend directory
- - Visit the [NodeJS](https://nodejs.org/en/download/) docs to download Node and NPM to use the frontend
-### Install project dependencies
-From the /frontend folder run following bash commands:
-```
-npm install
-
-npm start
-
-```
 
 ### API / route endpoints Documentation 
 

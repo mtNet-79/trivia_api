@@ -29,7 +29,7 @@ class Config:
     # AWS_KEY_ID = environ.get('AWS_KEY_ID')
 
 class TestingConfig:
-    SQLALCHEMY_DATABASE_URI = 'postgres://{}:{}@{}/{}'.format('postgres', 'AudrinaB12', 'localhost:5432', 'trivia_test')
+    SQLALCHEMY_DATABASE_URI = 'postgres://{}:{}@{}/{}'.format('postgres', password, 'localhost:5432', 'trivia_test')
     TESTING = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
