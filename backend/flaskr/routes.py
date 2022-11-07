@@ -33,7 +33,7 @@ def create_dict(arr):
         cats_dict[k] = v
     return cats_dict
 
-
+# IMPLEMENT CROSS-ORIGIN RESOURCE SHARING FOR ALL ORIGINS
 CORS(main, origins=["*"])
 
 
@@ -153,14 +153,14 @@ def create_question():
 
         new_question = body.get('question', None)
         new_answer = body.get('answer', None)
-        new_category = body.get('category', None)
-        new_difficulty = body.get('difficulty', None)
+        category = body.get('category', None)
+        difficulty = body.get('difficulty', None)
 
         question = Question(
             question=new_question,
             answer=new_answer,
-            category_id=new_category,
-            difficulty=new_difficulty
+            category_id=category,
+            difficulty=difficulty
         )
 
         question.insert()
@@ -201,7 +201,6 @@ def play_quiz():
     questions = Question.query.all()
 
     if quiz_category['type'] != "All":
-        print("here")
         questions = Question.query.filter(
             Question.category_id == quiz_category['id']).all()
         
@@ -241,6 +240,14 @@ def play_quiz():
     return jsonify(rtrnObj)
 
 
+@main.errorhandler(400)
+def not_found(error):
+    return (
+        jsonify({"success": False, "error": 400,
+                "message": "Bad request"}),
+        404,
+    )
+    
 @main.errorhandler(404)
 def not_found(error):
     return (
@@ -264,6 +271,14 @@ def unproccessable_entity(error):
     return (
         jsonify({"success": False, "error": 422,
                 "message": "unproccessable entity"}),
+        422,
+    )
+    
+@main.errorhandler(500)
+def unproccessable_entity(error):
+    return (
+        jsonify({"success": False, "error": 500,
+                "message": "server error"}),
         422,
     )
 

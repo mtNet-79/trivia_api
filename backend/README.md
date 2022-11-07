@@ -2,6 +2,7 @@
 
 ## Setting up the Backend
 
+
 ### Install Dependencies
 
 1. **Python 3.7** - Follow instructions to install the latest version of python for your platform in the [python docs](https://docs.python.org/3/using/unix.html#getting-and-installing-the-latest-version-of-python)
@@ -48,51 +49,290 @@ flask run --reload
 
 The `--reload` flag will detect file changes and restart the server automatically.
 
-## To Do Tasks
 
-These are the files you'd want to edit in the backend:
+# FrontEnd - Trivia API
 
-1. `backend/flaskr/__init__.py`
-2. `backend/test_flaskr.py`
+## Setting up the frontend
+### Install Node and NPM in the frontend directory
+ - Visit the [NodeJS](https://nodejs.org/en/download/) docs to download Node and NPM to use the frontend
+### Install project dependencies
+From the /frontend folder run following bash commands:
+```
+npm install
 
-One note before you delve into your tasks: for each endpoint, you are expected to define the endpoint and response data. The frontend will be a plentiful resource because it is set up to expect certain endpoints and response data formats already. You should feel free to specify endpoints in your own way; if you do so, make sure to update the frontend or you will get some unexpected behavior.
+npm start
 
-1. Use Flask-CORS to enable cross-domain requests and set response headers.
-2. Create an endpoint to handle `GET` requests for questions, including pagination (every 10 questions). This endpoint should return a list of questions, number of total questions, current category, categories.
-3. Create an endpoint to handle `GET` requests for all available categories.
-4. Create an endpoint to `DELETE` a question using a question `ID`.
-5. Create an endpoint to `POST` a new question, which will require the question and answer text, category, and difficulty score.
-6. Create a `POST` endpoint to get questions based on category.
-7. Create a `POST` endpoint to get questions based on a search term. It should return any questions for whom the search term is a substring of the question.
-8. Create a `POST` endpoint to get questions to play the quiz. This endpoint should take a category and previous question parameters and return a random questions within the given category, if provided, and that is not one of the previous questions.
-9. Create error handlers for all expected errors including 400, 404, 422, and 500.
+```
 
-## Documenting your Endpoints
+### API / route endpoints Documentation 
 
-You will need to provide detailed documentation of your API endpoints including the URL, request parameters, and the response body. Use the example below as a reference.
-
-### Documentation Example
-
-`GET '/api/v1.0/categories'`
+`GET '/categories'`
 
 - Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
 - Request Arguments: None
-- Returns: An object with a single key, `categories`, that contains an object of `id: category_string` key: value pairs.
+- Returns: An object with a two keys, `categories`, that contains an object of `id: category_string` key: value pairs. and `success` key and corresponding bool value 
 
-```json
+```
+json
 {
-  "1": "Science",
-  "2": "Art",
-  "3": "Geography",
-  "4": "History",
-  "5": "Entertainment",
-  "6": "Sports"
+  "categories": {
+    "1": "Science",
+    "2": "Art",
+    "3": "Geography",
+    "4": "History",
+    "5": "Entertainment",
+    "6": "Sports"
+  },
+  "success": true
 }
 ```
 
+`GET '/questions'`
+
+- Fetches a dictionary containing four items: all questions as an array of question objects, all categories as a dictionary of key:value pairs where keys are ids and values are name string, current_cateogry key with a name string value, and total number of questions key with integer value
+- Request Arguments: None
+- Returns: An object with a five keys:value pairs, 1. `categories`:{"id":"Name"} , 2. `current_category`:"name", 3.`questions`:[{"answer": string, "category_id": int, "difficulty": int, "question":string},{},...], 4.`success`:bool, 5.`total_questions`:int - with pagination of 10 per page
+
+``` 
+json
+{  
+  "categories": {
+    "1": "Science",
+    "2": "Art",
+    "3": "Geography",
+    "4": "History",
+    "5": "Entertainment",
+    "6": "Sports"
+  },
+  "current_category": "all",
+  "questions": [
+    {
+      "answer": "Maya Angelou",
+      "category_id": 4,
+      "difficulty": 2,
+      "id": 2,
+      "question": "Whose autobiography is entitled 'I KnowWhy the Caged Bird Sings'?"
+    },
+    {
+      "answer": "Apollo 13",
+      "category_id": 5,
+      "difficulty": 4,
+      "id": 3,
+      "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+    },
+    {
+      "answer": "Tom Cruise",
+      "category_id": 5,
+      "difficulty": 4,
+      "id": 4,
+      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
+    },
+    {
+      "answer": "Edward Scissorhands",
+      "category_id": 5,
+      "difficulty": 3,
+      "id": 5,
+      "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
+    },
+    
+  ],
+  "success": true,
+  "total_questions': 4
+}
+```
+`GET '/categories/<int:cat_id>/questions'`
+- Fetches a dictionary containing 3 items: questions for a particular category by id as array of question objects, current category name string, and total number of quesitons as integer value
+- Request Arguments: none (url id parameter given in route)
+- Returns: An object with four key:value pairs - 1. `current_category`:"name", 2.`questions`:[{"answer": string, "category_id": int, "difficulty": int, "question":string},{},...], 3.`success`:bool, 4.`total_questions`:int
+
+
+```
+json
+{
+  "current_category": "History",
+  "questions": [
+    {
+      "answer": "Maya Angelou",
+      "category_id": 4,
+      "difficulty": 2,
+      "id": 2,
+      "question": "Whose autobiography is entitled 'I KnowWhy the Caged Bird Sings'?"
+    },
+    {
+      "answer": "George Washington Carver",
+      "category_id": 4,
+      "difficulty": 3,
+      "id": 8,
+      "question": "Who invented Peanut Butter?"
+    },
+    {
+      "answer": "Muhammad Ali",
+      "category_id": 4,
+      "difficulty": 1,
+      "id": 30,
+      "question": "What boxer's original name is Cassius Clay?"
+    }
+  ],
+  "success": true,
+  "total_questions": 3
+}
+```
+
+`POST '/questions'`
+- Fetches a dictionary containing 2 items: questions that match a search term as an array of question objects, and total number of questions returned as integer value
+- Request Arguments: "searchTerm" : string
+e.g.
+```curl -d {"searchTerm": "Whose"} -X POST http://localhost2:5000/questions```
+- Returns: An object with three key:value pairs - 1.`questions`:[{"answer": string, "category_id": int, "difficulty": int, "question":string},{},...], 2.`success`:bool, 3.`total_questions`:int
+
+
+```
+json
+{
+  "questions": [
+    {
+      "answer": "Maya Angelou",
+      "category_id": 4,
+      "difficulty": 2,
+      "id": 2,
+      "question": "Whose autobiography is entitled 'I KnowWhy the Caged Bird Sings'?"
+    }
+  ],
+  "success": true,
+  "totalQuestions": 1
+}
+```
+
+
+
+`POST '/questions/<int:qid>'`
+- DELETES a question from the questions database using an id passed via url parameter 
+- Request Arguments: None
+e.g.
+``` curl -X DELETE http://localhost:5000/questions/3 ```
+- Returns: The data from questions database after deletion as an object with four key:value pairs - 1. `deleted`: int (id of deleted record), 2.`questions`:[{"answer": string, "category_id": int, "difficulty": int, "question":string},{},...], 3.`success`:bool, 4.`total_questions`:int
+
+
+```
+json
+{
+  "deleted": 3,
+  "questions": [
+    {
+      "answer": "Maya Angelou",
+      "category_id": 4,
+      "difficulty": 2,
+      "id": 2,
+      "question": "Whose autobiography is entitled 'I KnowWhy the Caged Bird Sings'?"
+    },
+    {
+      "answer": "Tom Cruise",
+      "category_id": 5,
+      "difficulty": 4,
+      "id": 4,
+      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
+    },
+    {
+      "answer": "Edward Scissorhands",
+      "category_id": 5,
+      "difficulty": 3,
+      "id": 5,
+      "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
+    },
+    
+  ],
+  "success": true,
+  "total_questions": 3
+}
+```
+
+`POST '/add'`
+- POSTs a new question to the questions database - allows user to post new questions
+- Request Arguments: a json object containing a new question string, a new answer string,a category id as integer, and a difficulty rating as integer
+e.g. 
+```curl -d '{"question": "Who done it?", "answer": "Mr. Nobody", "category": 4, "difficulty": 3}' -H "Content-Type: application/json" -X POST http://localhost:5000/add```
+- Returns: The data from questions database after creation of new question as an object with four key:value pairs - 1. `created`: int (id of created record), 2.`questions`:[{"answer": string, "category_id": int, "difficulty": int, "question":string},{},...], 3.`success`:bool, 4.`total_questions`:int - with pagination of 10 per page
+
+
+```
+json
+{
+   "created": 31,
+  "questions": [
+    {
+      "answer": "Maya Angelou",
+      "category_id": 4,
+      "difficulty": 2,
+      "id": 2,
+      "question": "Whose autobiography is entitled 'I KnowWhy the Caged Bird Sings'?"
+    },
+    {
+      "answer": "Tom Cruise",
+      "category_id": 5,
+      "difficulty": 4,
+      "id": 4,
+      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
+    },
+    {
+      "answer": "Edward Scissorhands",
+      "category_id": 5,
+      "difficulty": 3,
+      "id": 5,
+      "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
+    },
+    ...
+   
+  ],
+  "success": true,
+  "total_questions": 13
+}
+```
+`POST '/quizzes'`
+- fecthes a new random question based on other previously asked questions and choosen category - allows user to play trivia game
+- Request Arguments: a json object containing a "previous_questions" key with corresponding list value containing question ids of quesitons already asked, and a "quiz_category" dictionary with a key 'type' with corresponding category  name string and key "id" with category id integer 
+e.g. 
+```curl -d '{"previous_questions": [4,3], "quiz_category": {"type":"All", "id":0}}' -H "Content-Type: application/json" -X POST http://localhost:5000/quizzes```
+
+- Returns: The data from questions database after creation of new question as an object with four key:value pairs - 1. `created`: int (id of created record), 2.`questions`:[{"answer": string, "category_id": int, "difficulty": int, "question":string},{},...], 3.`success`:bool, 4.`total_questions`:int - with pagination of 10 per page
+
+
+```
+json
+{
+   "created": 31,
+  "questions": [
+    {
+      "answer": "Maya Angelou",
+      "category_id": 4,
+      "difficulty": 2,
+      "id": 2,
+      "question": "Whose autobiography is entitled 'I KnowWhy the Caged Bird Sings'?"
+    },
+    {
+      "answer": "Tom Cruise",
+      "category_id": 5,
+      "difficulty": 4,
+      "id": 4,
+      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
+    },
+    {
+      "answer": "Edward Scissorhands",
+      "category_id": 5,
+      "difficulty": 3,
+      "id": 5,
+      "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
+    },
+    ...
+   
+  ],
+  "success": true,
+  "total_questions": 13
+}
+```
+
+
 ## Testing
 
-Write at least one test for the success and at least one error behavior of each endpoint using the unittest library.
 
 To deploy the tests, run
 
