@@ -33,6 +33,7 @@ def create_dict(arr):
         cats_dict[k] = v
     return cats_dict
 
+
 # IMPLEMENT CROSS-ORIGIN RESOURCE SHARING FOR ALL ORIGINS
 CORS(main, origins=["*"])
 
@@ -151,17 +152,27 @@ def create_question():
     try:
         body = request.get_json()
 
-        new_question = body.get('question', None)
-        new_answer = body.get('answer', None)
-        category = body.get('category', None)
-        difficulty = body.get('difficulty', None)
+        new_question = body.get('question')
+        new_answer = body.get('answer')
+        category = body.get('category')
+        difficulty = body.get('difficulty')
+        setID = body.get('id', None)
 
-        question = Question(
-            question=new_question,
-            answer=new_answer,
-            category_id=category,
-            difficulty=difficulty
-        )
+        if setID:
+            question = Question(
+                question=new_question,
+                answer=new_answer,
+                category_id=category,
+                difficulty=difficulty,
+                id=setID
+            )
+        else:            
+            question = Question(
+                question=new_question,
+                answer=new_answer,
+                category_id=category,
+                difficulty=difficulty
+            )
 
         question.insert()
 
@@ -203,9 +214,9 @@ def play_quiz():
     if quiz_category['type'] != "All":
         questions = Question.query.filter(
             Question.category_id == quiz_category['id']).all()
-        
+
     if questions:
-        rand_index_num = random.randrange(len(questions))    
+        rand_index_num = random.randrange(len(questions))
     else:
         return jsonify({
             'success': True,
@@ -213,16 +224,17 @@ def play_quiz():
         })
     rtrnObj = {}
     current_question = None
-    
+
     if len(previous_questions_ids) > 0:
         prevRange = []
         while questions[rand_index_num].id in previous_questions_ids:
             prevRange.append(rand_index_num)
-            qsAvailable = [i for i in range(len(questions)) if i not in prevRange]
+            qsAvailable = [i for i in range(
+                len(questions)) if i not in prevRange]
             if qsAvailable:
                 rand_index_num = choice(qsAvailable)
-            else :
-                break              
+            else:
+                break
         else:
             current_question = questions[rand_index_num]
     else:
@@ -232,8 +244,8 @@ def play_quiz():
             'success': True,
             'currentQuestion': None
         }
-    else :
-         rtrnObj = {
+    else:
+        rtrnObj = {
             'success': True,
             'currentQuestion': current_question.format(),
         }
@@ -241,13 +253,14 @@ def play_quiz():
 
 
 @main.errorhandler(400)
-def not_found(error):
+def bad_request(error):
     return (
         jsonify({"success": False, "error": 400,
                 "message": "Bad request"}),
-        404,
+        400,
     )
-    
+
+
 @main.errorhandler(404)
 def not_found(error):
     return (
@@ -273,7 +286,8 @@ def unproccessable_entity(error):
                 "message": "unproccessable entity"}),
         422,
     )
-    
+
+
 @main.errorhandler(500)
 def unproccessable_entity(error):
     return (

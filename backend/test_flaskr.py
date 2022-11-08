@@ -6,7 +6,9 @@ import json
 # from flask_sqlalchemy import SQLAlchemy
 
 from flaskr import create_app
-# from models import setup_db, Question, Category
+from models import db, Question
+from sqlalchemy import func
+
 
 
 class TriviaTestCase(unittest.TestCase):
@@ -24,6 +26,17 @@ class TriviaTestCase(unittest.TestCase):
             "difficulty": 2,
             "category": 4
         }
+        
+        question = Question(
+                question="In what US state is the oldest living tree located?",
+                answer="California",
+                category_id=4,
+                difficulty=2
+            )
+
+        question.insert()
+        
+        self.del_id =  Question.query.all()[0].id
 
         self.quiz_category = {
             'type': 'History',
@@ -32,7 +45,8 @@ class TriviaTestCase(unittest.TestCase):
 
     def tearDown(self):
         """Executed after reach test"""
-
+        # for table in reversed(meta.sorted_tables):
+        # db.session.execute(f"TRUNCATE questions RESTART identity;")
         pass
 
     def test_get_categories(self):
@@ -44,6 +58,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(len(data['categories']))
 
     def test_404_sent_requesting_beyond_valid_page(self):
+        """ test get pagination failures """
         res = self.client().get("/questions?page=1000", json={"rating": 1})
         data = json.loads(res.data)
 
@@ -61,25 +76,25 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data["created"])
         self.assertTrue(len(data["questions"]))
 
-    #  USE APPROPRIATE ID IN res = self.client().delete("/questions/<id>") AND UNCOMMENT
+    def test_405_create_question_failure(self):
+        """ Test add new question failure"""
+        res = self.client().post("/add")
+        data = json.loads(res.data)
 
-    # def test_delete_question(self):
-    #     res = self.client().delete("/questions/40")
-    #     data = json.loads(res.data)
+        self.assertEqual(res.status_code, 405, msg='{0}'.format(res.data))
+        self.assertEqual(data["success"], False)
+        self.assertEqual(data["message"], "method not allowed")
 
-    #     self.assertEqual(res.status_code, 200, msg='{0}'.format(res))
-    #     self.assertEqual(data["success"], True)
-    #     self.assertTrue(data["deleted"])
-    #     self.assertTrue(len(data["questions"]))
-    #     self.assertTrue(data["total_questions"])
+    
 
-    def test_405_if_question_creation_not_allowed(self):
-        res = self.client().delete("/add", json=self.new_question)
-        # data = json.loads(res.data)
+    def test_delete_question(self):
+        """ Test delete question failure"""
+        res = self.client().delete("/questions/111")
+        data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 405,  msg='{0}'.format(res.data))
-        # self.assertEqual(data["success"], False)
-        # self.assertEqual(data["message"], "method not allowed")
+        self.assertEqual(res.status_code, 404, msg='{0}'.format(res))
+        self.assertEqual(data["success"], False)
+        self.assertEqual(data["message"], "resource not found")
 
     def test_search_for_qeustion_with_term(self):
         """ Test get questions with where search term matches"""
@@ -91,7 +106,17 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data["questions"])
         self.assertTrue(data["totalQuestions"])
 
+    def test_bad_request_search_for_qeustion_with_term(self):
+        """ Test get questions with where search term failure"""
+        res = self.client().post("/questions")
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 400,  msg='{0}'.format(res.data))
+        self.assertEqual(data["success"], False)
+        self.assertEqual(data["message"], "Bad request")
+
     def test_get_questions_by_category(self):
+        """ Test get questions by category"""
         res = self.client().get("/categories/4/questions")
         data = json.loads(res.data)
 
@@ -101,7 +126,8 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data["total_questions"])
 
     def test_get_questions_by_category_not_found(self):
-        res = self.client().get("/categories/400/questions")
+        """ Test get questions by category failure """
+        res = self.client().get("/categories/4000/questions")
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404,  msg='{0}'.format(res.data))
@@ -120,6 +146,15 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200,  msg='{0}'.format(res.data))
         self.assertEqual(data["success"], True)
         self.assertTrue(data["currentQuestion"])
+        
+    def test_delete_question(self):
+        """ Test delete question """
+        res = self.client().delete("/questions/"+str(self.del_id))
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200, msg='{0}'.format(res))
+        self.assertEqual(data["success"], True)
+        self.assertTrue(data["deleted"])
 
     """
     TODO
